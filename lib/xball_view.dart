@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 
 //手指按下时命中的point
-PointAnimationSequence pointAnimationSequence;
+PointAnimationSequence? pointAnimationSequence;
 
 //球半径
 int radius = 150;
@@ -20,11 +20,11 @@ class XBallView extends StatefulWidget {
   final List<String> highlight;
 
   const XBallView({
-    Key key,
-    @required this.mediaQueryData,
-    @required this.keywords,
-    @required this.highlight,
-  }) : super(key: key);
+    super.key,
+    required this.mediaQueryData,
+    required this.keywords,
+    required this.highlight,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -35,19 +35,19 @@ class XBallView extends StatefulWidget {
 class _XBallViewState extends State<XBallView>
     with SingleTickerProviderStateMixin {
   //带光晕的球图片宽度
-  double sizeOfBallWithFlare;
+  late double sizeOfBallWithFlare;
 
   List<Point> points = [];
 
-  Animation<double> animation;
-  AnimationController controller;
+  late Animation<double> animation;
+  late AnimationController controller;
   double currentRadian = 0;
 
   //手指移动的上一个位置
-  Offset lastPosition;
+  Offset? lastPosition;
 
   //手指按下的位置
-  Offset downPosition;
+  Offset? downPosition;
 
   //上次点击并命中关键词的时间
   int lastHitTime = 0;
@@ -100,7 +100,7 @@ class _XBallViewState extends State<XBallView>
 
   @override
   void dispose() {
-    controller?.dispose();
+    controller.dispose();
     super.dispose();
   }
 
@@ -138,7 +138,7 @@ class _XBallViewState extends State<XBallView>
 
       Point point = Point(x, y, z);
       point.name = keywords[i];
-      bool needHight = _needHight(point.name);
+      bool needHight = _needHeight(point.name);
       //计算point在各个z坐标时的paragraph
       point.paragraphs = [];
       //每3个z生成一个paragraphs，节省内存
@@ -158,9 +158,9 @@ class _XBallViewState extends State<XBallView>
   }
 
   ///检查此关键字是否需要高亮
-  bool _needHight(String keyword) {
+  bool _needHeight(String keyword) {
     bool ret = false;
-    if (widget.highlight != null && widget.highlight.length > 0) {
+    if (widget.highlight.length > 0) {
       for (int i = 0; i < widget.highlight.length; i++) {
         if (keyword == widget.highlight[i]) {
           ret = true;
@@ -239,7 +239,7 @@ class _XBallViewState extends State<XBallView>
 
         //速度跟踪队列
         clearQueue();
-        addToQueue(PositionWithTime(downPosition, now));
+        addToQueue(PositionWithTime(downPosition!, now));
 
         //手指触摸时停止动画
         controller.stop();
@@ -250,8 +250,8 @@ class _XBallViewState extends State<XBallView>
 
         addToQueue(PositionWithTime(currentPostion, now));
 
-        Offset delta = Offset(currentPostion.dx - lastPosition.dx,
-            currentPostion.dy - lastPosition.dy);
+        Offset delta = Offset(currentPostion.dx - lastPosition!.dx,
+            currentPostion.dy - lastPosition!.dy);
         double distance = sqrt(delta.dx * delta.dx + delta.dy * delta.dy);
         //若计算量级太小，框架内部会报精度溢出的错误
         if (distance > 2) {
@@ -291,8 +291,8 @@ class _XBallViewState extends State<XBallView>
 
         //检测点击事件
         double distanceSinceDown = sqrt(
-            pow(upPosition.dx - downPosition.dx, 2) +
-                pow(upPosition.dy - downPosition.dy, 2));
+            pow(upPosition.dx - downPosition!.dx, 2) +
+                pow(upPosition.dy - downPosition!.dy, 2));
         //按下和抬起点的距离小于4，认为是点击事件
         if (distanceSinceDown < 4) {
           //寻找命中的point
@@ -310,7 +310,7 @@ class _XBallViewState extends State<XBallView>
 
                 //创建点选中动画序列
                 pointAnimationSequence = PointAnimationSequence(
-                    points[i], _needHight(points[i].name));
+                    points[i], _needHeight(points[i].name));
 
                 //跳转页面
                 Future.delayed(Duration(milliseconds: 500), () {
@@ -373,10 +373,12 @@ class _XBallViewState extends State<XBallView>
 }
 
 class MyPainter extends CustomPainter {
-  List<Point> points;
-  Paint ballPaint, pointPaint;
+  final List<Point> points;
+  late Paint ballPaint, pointPaint;
 
-  MyPainter(this.points) {
+  MyPainter(
+    this.points,
+  ) {
     ballPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
@@ -395,13 +397,13 @@ class MyPainter extends CustomPainter {
     for (int i = 0; i < points.length; i++) {
       List<double> xy = transformCoordinate(points[i]);
 
-      ui.Paragraph p;
+      late ui.Paragraph p;
       //是被选中的点，需要展示放大缩小效果
       if (pointAnimationSequence != null &&
-          pointAnimationSequence.point == points[i]) {
+          pointAnimationSequence?.point == points[i]) {
         //动画未播放完毕
-        if (pointAnimationSequence.paragraphs.isNotEmpty) {
-          p = pointAnimationSequence.paragraphs.removeFirst();
+        if (pointAnimationSequence?.paragraphs.isNotEmpty == true) {
+          p = pointAnimationSequence!.paragraphs.removeFirst();
           //动画已播放完毕
         } else {
           p = points[i].getParagraph(radius);
@@ -540,8 +542,8 @@ double getFontOpacity(double z) {
 
 class Point {
   double x, y, z;
-  String name;
-  List<ui.Paragraph> paragraphs;
+  String name = "";
+  List<ui.Paragraph> paragraphs = [];
 
   Point(this.x, this.y, this.z);
 
@@ -563,7 +565,7 @@ class PositionWithTime {
 class PointAnimationSequence {
   Point point;
   bool needHighLight;
-  Queue<ui.Paragraph> paragraphs;
+  late Queue<ui.Paragraph> paragraphs;
 
   PointAnimationSequence(this.point, this.needHighLight) {
     paragraphs = Queue();
