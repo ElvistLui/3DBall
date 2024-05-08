@@ -23,8 +23,8 @@ Point类中主要存储了点的坐标(x,y,z)和要显示的文字(name)。
 ```dart
 class Point {
   double x, y, z;
-  String name;
-  List<ui.Paragraph> paragraphs;
+  String name = "";
+  List<ui.Paragraph> paragraphs = [];
 
   Point(this.x, this.y, this.z);
 
@@ -207,3 +207,6 @@ Listener(
 # 源码及Demo
 
 https://github.com/al4fun/3DBall
+
+https://github.com/ElvistLui/3DBall
+
